@@ -95,17 +95,10 @@ const BookDetail = () => {
         >
           <Ionicons name="arrow-back" size={24} color="#333" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Book Details</Text>
       </View>
       
       <ScrollView style={styles.scrollContainer}>
-        <View style={styles.coverContainer}>
-          <Image 
-            source={{ uri: bookCover }} 
-            style={styles.coverImage} 
-            resizeMode="cover"
-          />
-        </View>
+        
         
         <View style={styles.infoContainer}>
           <Text style={styles.bookTitle}>{book?.title}</Text>

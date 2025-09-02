@@ -24,7 +24,6 @@ const BookEdit = () => {
   const [fetching, setFetching] = useState(true);
   const [error, setError] = useState(null);
 
-  // โหลดข้อมูลเก่า
   useEffect(() => {
     const fetchBook = async () => {
       try {
@@ -60,7 +59,6 @@ const BookEdit = () => {
     return true;
   };
 
-  // อัพเดตข้อมูล
   const handleUpdate = async () => {
     if (!validateInputs()) return;
     
@@ -140,7 +138,6 @@ const BookEdit = () => {
           >
             <Ionicons name="arrow-back" size={24} color="#333" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Edit Book</Text>
         </View>
 
         <ScrollView style={styles.formContainer}>

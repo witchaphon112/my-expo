@@ -72,11 +72,7 @@ const Book = () => {
         onPress={() => handleBookSelect(item._id)}
         activeOpacity={0.7}
       >
-        <Image 
-          source={{ uri: bookCover }} 
-          style={styles.bookCover}
-          resizeMode="cover"
-        />
+        
         <View style={styles.bookInfo}>
           <Text style={styles.bookTitle} numberOfLines={2}>{item.title}</Text>
           <Text style={styles.bookAuthor} numberOfLines={1}>{item.author}</Text>
@@ -92,26 +88,7 @@ const Book = () => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#f5f5f7" />
-      
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Book Library</Text>
-      </View>
-      
-      <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color="#666" style={styles.searchIcon} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search by title or author"
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          clearButtonMode="while-editing"
-        />
-        {searchQuery.length > 0 && (
-          <TouchableOpacity onPress={() => setSearchQuery('')}>
-            <Ionicons name="close-circle" size={20} color="#666" />
-          </TouchableOpacity>
-        )}
-      </View>
+
       
       {loading ? (
         <View style={styles.loaderContainer}>
@@ -183,27 +160,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 22,
     fontWeight: "700",
-    color: "#333",
-  },
-  searchContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#fff",
-    marginHorizontal: 15,
-    marginVertical: 10,
-    paddingHorizontal: 15,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#e0e0e0",
-    height: 45,
-  },
-  searchIcon: {
-    marginRight: 10,
-  },
-  searchInput: {
-    flex: 1,
-    height: 40,
-    fontSize: 16,
     color: "#333",
   },
   listContainer: {
