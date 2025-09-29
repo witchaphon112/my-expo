@@ -173,7 +173,7 @@ const About = () => {
 
           <View>
             <Text style={styles.instructorName}>อ.ธนภัทร วงษ์คำจันทร์</Text>
-            <Text style={styles.instructorDetail}>ภาควิชาวิทยาการคอมพิวเตอร์</Text>
+            <Text style={styles.instructorDetail}>ภาควิชาวิทยาการคอมพิวเตอร์และสารสนเทศ</Text>
             <Text style={styles.instructorDetail}>คณะวิทยาศาสตร์</Text>
           </View>
         </View>
