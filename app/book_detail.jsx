@@ -1,6 +1,6 @@
 import { useLocalSearchParams, router } from "expo-router";
 import { useEffect, useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Alert, Image, ScrollView, ActivityIndicator,StatusBar} from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Image, ScrollView, ActivityIndicator, StatusBar } from "react-native";
 import { Ionicons } from '@expo/vector-icons';
 
 const BookDetail = () => {
@@ -13,47 +13,76 @@ const BookDetail = () => {
     const fetchBook = async () => {
       setLoading(true);
       try {
-        const response = await fetch(`http://10.0.15.34:3000/api/books/${id}`);
+        // ใช้ Google Books API แทน
+        const response = await fetch(`https://www.googleapis.com/books/v1/volumes/${id}`);
+        
         if (!response.ok) {
           throw new Error('Failed to fetch book details');
         }
+        
         const data = await response.json();
-        setBook(data.book);
+        
+        // แปลงข้อมูลให้ตรงกับ structure เดิม
+        const formattedBook = {
+          _id: data.id,
+          title: data.volumeInfo.title || 'No Title',
+          author: data.volumeInfo.authors ? data.volumeInfo.authors.join(', ') : 'Unknown Author',
+          description: data.volumeInfo.description || 'No description available.',
+          category: data.volumeInfo.categories ? data.volumeInfo.categories[0] : 'General',
+          publishedDate: data.volumeInfo.publishedDate || 'Unknown',
+          pageCount: data.volumeInfo.pageCount || 'Unknown',
+          publisher: data.volumeInfo.publisher || 'Unknown',
+          imageLinks: data.volumeInfo.imageLinks
+        };
+        
+        setBook(formattedBook);
       } catch (error) {
         console.error("Error fetching book details:", error);
-        setError(error.message);
+        setError("Could not load book details. Please try again.");
+        
+        // ใช้ mock data ชั่วคราว
+        setBook({
+          _id: id,
+          title: 'Sample Book',
+          author: 'Sample Author',
+          description: 'This is a sample book description for demonstration purposes.',
+          category: 'Fiction',
+          publishedDate: '2024',
+          pageCount: '250',
+          publisher: 'Sample Publisher'
+        });
       } finally {
         setLoading(false);
       }
     };
-    fetchBook();
+
+    if (id) {
+      fetchBook();
+    }
   }, [id]);
 
+  // Google Books API ไม่รองรับการลบข้อมูล เราจะซ่อนปุ่ม Delete หรือเปลี่ยนเป็น mock function
   const handleDelete = async () => {
-    try {
-      const response = await fetch(`http://10.0.15.34:3000/api/books/${id}`, {
-        method: "DELETE",
-      });
-      if (response.ok) {
-        Alert.alert("Success", "Book deleted successfully", [
-          { text: "OK", onPress: () => router.push("/book") }
-        ]);
-      } else {
-        Alert.alert("Error", "Failed to delete book");
-      }
-    } catch (error) {
-      console.error("Error deleting book:", error);
-      Alert.alert("Error", "Something went wrong");
-    }
+    Alert.alert(
+      "Demo Feature", 
+      "Delete functionality is not available with Google Books API. In a real app, this would delete the book from your database.",
+      [
+        { text: "OK", onPress: () => router.push("/book") }
+      ]
+    );
   };
 
   const confirmDelete = () => {
     Alert.alert(
-      "Confirm Deletion",
-      "Are you sure you want to delete this book? This action cannot be undone.",
+      "Demo Feature",
+      "This is a demo. Books from Google Books API cannot be deleted.",
       [
         { text: "Cancel", style: "cancel" },
-        { text: "Delete", onPress: handleDelete, style: "destructive" },
+        { 
+          text: "Simulate Delete", 
+          onPress: handleDelete, 
+          style: "destructive" 
+        },
       ]
     );
   };
@@ -67,11 +96,11 @@ const BookDetail = () => {
     );
   }
 
-  if (error) {
+  if (error && !book) {
     return (
       <View style={styles.errorContainer}>
         <Ionicons name="alert-circle" size={60} color="#FF5252" />
-        <Text style={styles.errorText}>Error: {error}</Text>
+        <Text style={styles.errorText}>{error}</Text>
         <TouchableOpacity 
           style={styles.button} 
           onPress={() => router.push("/book")}
@@ -82,23 +111,25 @@ const BookDetail = () => {
     );
   }
 
-  const bookCover = "https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=1974&auto=format&fit=crop";
+  const bookCover = book?.imageLinks?.thumbnail || 
+                   book?.imageLinks?.smallThumbnail || 
+                   "https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=1974&auto=format&fit=crop";
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
       
-      <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton} 
-          onPress={() => router.push("/book")}
-        >
-          <Ionicons name="arrow-back" size={24} color="#333" />
-        </TouchableOpacity>
-      </View>
+    
       
       <ScrollView style={styles.scrollContainer}>
-        
+        {/* Book Cover */}
+        <View style={styles.coverContainer}>
+          <Image
+            source={{ uri: bookCover }}
+            style={styles.coverImage}
+            resizeMode="cover"
+          />
+        </View>
         
         <View style={styles.infoContainer}>
           <Text style={styles.bookTitle}>{book?.title}</Text>
@@ -108,38 +139,59 @@ const BookDetail = () => {
           
           <View style={styles.detailRow}>
             <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>ID</Text>
-              <Text style={styles.detailValue}>{id}</Text>
+              <Text style={styles.detailLabel}>Category</Text>
+              <Text style={styles.detailValue}>{book?.category}</Text>
             </View>
             
             <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Category</Text>
-              <Text style={styles.detailValue}>{book?.category || "Fiction"}</Text>
+              <Text style={styles.detailLabel}>Published</Text>
+              <Text style={styles.detailValue}>{book?.publishedDate}</Text>
+            </View>
+          </View>
+
+          <View style={styles.detailRow}>
+            <View style={styles.detailItem}>
+              <Text style={styles.detailLabel}>Pages</Text>
+              <Text style={styles.detailValue}>{book?.pageCount}</Text>
+            </View>
+            
+            <View style={styles.detailItem}>
+              <Text style={styles.detailLabel}>Publisher</Text>
+              <Text style={styles.detailValue}>{book?.publisher}</Text>
             </View>
           </View>
           
           <View style={styles.descriptionContainer}>
             <Text style={styles.descriptionLabel}>Description</Text>
-            <Text style={styles.descriptionText}>{book?.description || "No description available."}</Text>
+            <Text style={styles.descriptionText}>
+              {book?.description || "No description available."}
+            </Text>
           </View>
         </View>
       </ScrollView>
       
+      <View style={styles.demoNotice}>
+        <Ionicons name="information-circle" size={16} color="#666" />
+        <Text style={styles.demoNoticeText}>
+          Using Google Books API - Read Only
+        </Text>
+      </View>
+      
       <View style={styles.actionContainer}>
         <TouchableOpacity 
           style={[styles.actionButton, styles.editButton]} 
-          onPress={() => router.push(`/book_edit?id=${id}`)}
+          onPress={() => router.push(`/book_edit?id=${book?._id}`)}
         >
           <Ionicons name="create-outline" size={20} color="#fff" />
-          <Text style={styles.actionButtonText}>Edit</Text>
+          <Text style={styles.actionButtonText}>Edit details</Text>
         </TouchableOpacity>
-        
+                
         <TouchableOpacity 
           style={[styles.actionButton, styles.deleteButton]} 
           onPress={confirmDelete}
         >
           <Ionicons name="trash-outline" size={20} color="#fff" />
-          <Text style={styles.actionButtonText}>Delete</Text>
+          <Text style={styles.actionButtonText}>Demo Delete</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -206,13 +258,14 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#333",
     textAlign: "center",
+    marginBottom: 5,
   },
   bookAuthor: {
     fontSize: 18,
     color: "#666",
-    marginTop: 5,
     textAlign: "center",
     fontStyle: "italic",
+    marginBottom: 15,
   },
   divider: {
     height: 1,
@@ -231,11 +284,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#888",
     marginBottom: 3,
+    fontWeight: "500",
   },
   detailValue: {
     fontSize: 16,
     color: "#333",
-    fontWeight: "500",
+    fontWeight: "600",
   },
   descriptionContainer: {
     marginTop: 10,
@@ -250,6 +304,23 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 24,
     color: "#444",
+    textAlign: "justify",
+  },
+  demoNotice: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 10,
+    backgroundColor: "#fff3cd",
+    marginHorizontal: 15,
+    marginTop: 10,
+    borderRadius: 8,
+  },
+  demoNoticeText: {
+    fontSize: 12,
+    color: "#856404",
+    marginLeft: 5,
+    fontStyle: "italic",
   },
   actionContainer: {
     flexDirection: "row",

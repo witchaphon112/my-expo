@@ -28,76 +28,48 @@ const BookEdit = () => {
     const fetchBook = async () => {
       try {
         setFetching(true);
-        const res = await fetch(`http://10.0.15.34:3000/api/books/${id}`);
+        // ใช้ Google Books API แทน
+        const res = await fetch(`https://www.googleapis.com/books/v1/volumes/${id}`);
+        
         if (!res.ok) {
           throw new Error("Failed to fetch book data");
         }
+        
         const data = await res.json();
-        setTitle(data.book?.title || data.title || "");
-        setAuthor(data.book?.author || data.author || "");
-        setDescription(data.book?.description || data.description || "");
+        
+        // แปลงข้อมูลจาก Google Books API
+        setTitle(data.volumeInfo?.title || "");
+        setAuthor(data.volumeInfo?.authors?.join(', ') || "");
+        setDescription(data.volumeInfo?.description || "");
       } catch (err) {
         console.error("Error fetching book:", err);
         setError(err.message);
+        
+        // ใช้ mock data ชั่วคราว
+        setTitle("Sample Book Title");
+        setAuthor("Sample Author");
+        setDescription("This is a sample book description for demonstration purposes.");
       } finally {
         setFetching(false);
       }
     };
+    
     if (id) fetchBook();
   }, [id]);
 
-  // Validate inputs
-  const validateInputs = () => {
-    if (!title.trim()) {
-      Alert.alert("Validation Error", "Title cannot be empty");
-      return false;
-    }
-    if (!author.trim()) {
-      Alert.alert("Validation Error", "Author cannot be empty");
-      return false;
-    }
-    return true;
-  };
-
   const handleUpdate = async () => {
-    if (!validateInputs()) return;
-    
-    try {
-      setLoading(true);
-      const updateData = { title, author, description };
-      const response = await fetch(`http://10.0.15.34:3000/api/books/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updateData),
-      });
-      
-      if (response.ok) {
-        Alert.alert(
-          "Success",
-          "Book updated successfully",
-          [{ text: "OK", onPress: () => router.push("/book") }]
-        );
-      } else {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to update book");
-      }
-    } catch (error) {
-      console.error("Error updating book:", error);
-      Alert.alert("Error", error.message || "Failed to update book");
-    } finally {
-      setLoading(false);
-    }
+    // Google Books API ไม่อนุญาตให้แก้ไขข้อมูล
+    Alert.alert(
+      "Demo Feature",
+      "This is a demo. Books from Google Books API cannot be edited.\n\nConsider implementing your own backend API or using a service like Firebase to enable editing functionality.",
+      [
+        { text: "OK" }
+      ]
+    );
   };
 
   const handleCancel = () => {
-    Alert.alert(
-      "Confirm Cancel",
-      "Are you sure you want to cancel? Any unsaved changes will be lost.",
-      [
-        { text: "Continue Editing", style: "cancel" },
-        { text: "Discard Changes", onPress: () => router.back() }
-      ]
-    );
+    router.back();
   };
 
   if (fetching) {
@@ -109,21 +81,6 @@ const BookEdit = () => {
     );
   }
 
-  if (error) {
-    return (
-      <View style={styles.errorContainer}>
-        <Ionicons name="alert-circle-outline" size={60} color="#FF5252" />
-        <Text style={styles.errorText}>{error}</Text>
-        <TouchableOpacity 
-          style={styles.errorButton}
-          onPress={() => router.back()}
-        >
-          <Text style={styles.errorButtonText}>Go Back</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
-
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
@@ -131,49 +88,52 @@ const BookEdit = () => {
     >
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
       <View style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity 
-            style={styles.backButton} 
-            onPress={handleCancel}
-          >
-            <Ionicons name="arrow-back" size={24} color="#333" />
-          </TouchableOpacity>
+        
+        {/* Demo Notice */}
+        <View style={styles.demoNotice}>
+          <Ionicons name="information-circle" size={16} color="#666" />
+          <Text style={styles.demoNoticeText}>
+            Using Google Books API - Read Only
+          </Text>
         </View>
 
         <ScrollView style={styles.formContainer}>
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Title</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, styles.readOnlyInput]}
               value={title}
               onChangeText={setTitle}
-              placeholder="Enter book title"
+              placeholder="Book title"
               placeholderTextColor="#999"
+              editable={false}
             />
           </View>
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Author</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, styles.readOnlyInput]}
               value={author}
               onChangeText={setAuthor}
-              placeholder="Enter author name"
+              placeholder="Author name"
               placeholderTextColor="#999"
+              editable={false}
             />
           </View>
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Description</Text>
             <TextInput
-              style={[styles.input, styles.textArea]}
+              style={[styles.input, styles.textArea, styles.readOnlyInput]}
               value={description}
               onChangeText={setDescription}
-              placeholder="Enter book description"
+              placeholder="Book description"
               placeholderTextColor="#999"
               multiline
               textAlignVertical="top"
               numberOfLines={6}
+              editable={false}
             />
           </View>
         </ScrollView>
@@ -182,24 +142,16 @@ const BookEdit = () => {
           <TouchableOpacity
             style={[styles.button, styles.cancelButton]}
             onPress={handleCancel}
-            disabled={loading}
           >
-            <Text style={styles.cancelButtonText}>Cancel</Text>
+            <Text style={styles.cancelButtonText}>Back</Text>
           </TouchableOpacity>
           
           <TouchableOpacity
-            style={[styles.button, styles.saveButton, loading && styles.disabledButton]}
+            style={[styles.button, styles.saveButton, styles.disabledButton]}
             onPress={handleUpdate}
-            disabled={loading}
           >
-            {loading ? (
-              <ActivityIndicator color="#fff" size="small" />
-            ) : (
-              <>
-                <Ionicons name="save-outline" size={18} color="#fff" />
-                <Text style={styles.saveButtonText}>Save Changes</Text>
-              </>
-            )}
+            <Ionicons name="create-outline" size={18} color="#fff" />
+            <Text style={styles.saveButtonText}>View Only</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -233,6 +185,22 @@ const styles = StyleSheet.create({
     marginLeft: 15,
     color: "#333",
   },
+  demoNotice: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 10,
+    backgroundColor: "#fff3cd",
+    marginHorizontal: 15,
+    marginTop: 10,
+    borderRadius: 8,
+  },
+  demoNoticeText: {
+    fontSize: 12,
+    color: "#856404",
+    marginLeft: 5,
+    fontStyle: "italic",
+  },
   formContainer: {
     flex: 1,
     padding: 20,
@@ -260,6 +228,10 @@ const styles = StyleSheet.create({
     shadowRadius: 1,
     elevation: 1,
   },
+  readOnlyInput: {
+    backgroundColor: "#f9f9f9",
+    color: "#666",
+  },
   textArea: {
     minHeight: 120,
     paddingTop: 12,
@@ -280,7 +252,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   saveButton: {
-    backgroundColor: "#5271FF",
+    backgroundColor: "#6c757d",
     marginLeft: 10,
   },
   saveButtonText: {
